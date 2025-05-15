@@ -1,0 +1,117 @@
+/* General Styles for Public Pages */
+body {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+/* Headers */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #007cba;
+  margin-bottom: 20px;
+}
+
+/* Form Styles */
+form {
+  margin: 20px auto;
+  max-width: 600px;
+  padding: 15px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+input[type="text"],
+input[type="email"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Button Styles */
+button {
+  background-color: #007cba;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005a9c;
+}
+
+/* Links */
+a {
+  color: #007cba;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Content Container */
+.container {
+  margin: 20px auto;
+  max-width: 800px;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cetg-event-info {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.cetg-event-info img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.cetg-ticket-redeem {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.cetg-ticket-redeem form input[type="text"],
+.cetg-ticket-redeem form input[type="email"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.cetg-ticket-redeem form input[type="submit"] {
+  background-color: #0073aa;
+  color: #fff;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.cetg-ticket-redeem form input[type="submit"]:hover {
+  background-color: #005177;
+}

@@ -1,0 +1,56 @@
+/* General Styles for Admin Pages */
+body.wp-admin {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+/* Admin Menu Customization */
+#adminmenu .menu-top {
+  background-color: #23282d;
+  color: #fff;
+}
+
+#adminmenu .menu-top:hover {
+  background-color: #007cba;
+  color: #fff;
+}
+
+/* Admin Page Headings */
+h1 {
+  font-size: 24px;
+  color: #23282d;
+  margin-bottom: 20px;
+}
+
+/* Form Styles */
+form {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f1f1f1;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input[type="text"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Button Styles */
+button.button {
+  background-color: #007cba;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button.button:hover {
+  background-color: #005a9c;
+}

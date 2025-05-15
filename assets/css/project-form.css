@@ -1,0 +1,125 @@
+.goalforge-project-form {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    max-width: 600px;
+    margin: 20px auto;
+    font-family: sans-serif;
+}
+
+.goalforge-project-form h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.goalforge-project-form input,
+.goalforge-project-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.goalforge-project-form button {
+    background: #0073aa;
+    color: #fff;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.goalforge-project-form .error,
+.goalforge-project-form .success {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.goalforge-project-form .error {
+    background: #fdd;
+    color: #900;
+}
+
+.goalforge-project-form .success {
+    background: #dfd;
+    color: #090;
+}
+.goalforge-project-form {
+background: #fff;
+border: 1px solid #ddd;
+padding: 2rem;
+max-width: 600px;
+margin: 2rem auto;
+border-radius: 12px;
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+font-family: sans-serif;
+}
+
+.goalforge-project-form h2 {
+margin-bottom: 1.5rem;
+font-size: 1.8rem;
+text-align: center;
+}
+
+.goalforge-project-form input[type="text"],
+.goalforge-project-form textarea,
+.goalforge-project-form input[type="date"],
+.goalforge-project-form select {
+width: 100%;
+padding: 0.75rem;
+margin-bottom: 1.25rem;
+border: 1px solid #ccc;
+border-radius: 8px;
+font-size: 1rem;
+background-color: #f9f9f9;
+}
+
+.goalforge-status-message {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.goalforge-status-message.success {
+    background-color: #e6ffed;
+    color: #007800;
+    border: 1px solid #00a100;
+}
+
+.goalforge-status-message.error {
+    background-color: #ffe6e6;
+    color: #a10000;
+    border: 1px solid #d10000;
+}
+
+.goalforge-project-form select {
+background-color: #fff;
+appearance: none;
+-webkit-appearance: none;
+-moz-appearance: none;
+background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D'10'%20height%3D'10'%20xmlns%3D'http%3A//www.w3.org/2000/svg'%3E%3Cpath%20d%3D'M0%200l5%205%205-5z'%20fill%3D'%23333'%20/%3E%3C/svg%3E");
+background-repeat: no-repeat;
+background-position: right 0.75rem center;
+background-size: 10px;
+padding-right: 2rem;
+}
+
+.goalforge-project-form button[type="submit"] {
+background-color: #0073aa;
+color: #fff;
+padding: 0.75rem 1.5rem;
+border: none;
+border-radius: 8px;
+cursor: pointer;
+font-size: 1rem;
+transition: background-color 0.3s ease;
+}
+
+.goalforge-project-form button[type="submit"]:hover {
+background-color: #005c8c;
+}
