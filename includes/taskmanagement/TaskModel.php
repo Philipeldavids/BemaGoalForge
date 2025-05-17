@@ -47,7 +47,7 @@ class TaskModel
                 'created_at'   => current_time('mysql'),
                 'updated_at'   => current_time('mysql')
             ],
-            ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
+            ['%s', '%s', '%s', '%s', '%s', '%s', '%s', ]
         );
 
         if ($result === false) {
@@ -76,11 +76,13 @@ class TaskModel
         }
 
         // Update task in the database
+
+     
         $result = $wpdb->update(
             $this->table_name,
             $this->sanitizeTaskData($updatedData),
             ['id' => $taskId],
-            ['%s', '%s', '%s', '%d'], // Data types for fields being updated
+            ['%s', '%s', '%s', '%d','%d'], // Data types for fields being updated
             ['%d'] // Data type for the WHERE clause
         );
 
@@ -231,7 +233,7 @@ class TaskModel
         $sanitizedData = [
             'title'        => sanitize_text_field($taskData['title'] ?? ''),
             'description'  => isset($taskData['description']) ? sanitize_textarea_field($taskData['description']) : null,
-            'due_date'     => isset($taskData['due_date']) && Validation::isValidDate($taskData['due_date'])
+            'due_date'     => isset($taskData['due_date']) 
                                 ? sanitize_text_field($taskData['due_date'])
                                 : null,
             'project_id' => isset($taskData['project_id']) ? intval($taskData['project_id']) : null,

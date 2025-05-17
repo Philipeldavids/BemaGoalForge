@@ -16,7 +16,7 @@ class Validation
      */
     public static function isValidDate(string $date): bool
     {
-        $format = 'm-d-Y'; // Expected date format
+        $format = 'Y-m-d'; // Expected date format
         $dateTime = \DateTime::createFromFormat($format, $date);
 
         return $dateTime && $dateTime->format($format) === $date;

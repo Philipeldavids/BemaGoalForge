@@ -119,7 +119,7 @@ final class DatabaseHandler
 
         //Tasks table
         $tasks_table = $wpdb->prefix . 'goalforge_tasks';    
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        $sql = "CREATE TABLE IF NOT EXISTS $tasks_table (
         id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         title VARCHAR(255) NOT NULL,
         description TEXT,
@@ -128,6 +128,8 @@ final class DatabaseHandler
         reminder_time VARCHAR(50),
         project_id BIGINT(20) UNSIGNED,
         created_by BIGINT(20) UNSIGNED,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
         FOREIGN KEY (project_id) REFERENCES {$wpdb->prefix}goalforge_projects(id) ON DELETE SET NULL,
         FOREIGN KEY (created_by) REFERENCES {$wpdb->users}(ID) ON DELETE SET NULL
@@ -207,6 +209,19 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
             FOREIGN KEY (user_id) REFERENCES {$wpdb->prefix}users(ID) ON DELETE CASCADE
         ) $charset_collate;";
 
+        //MILESTONE TABLE
+        $milestone_table = $wpdb->prefix . 'goalforge_milestones';
+        $milestone_sql = "CREATE TABLE IF NOT EXISTS $milestone_table (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            project_id BIGINT(20) UNSIGNED NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            description TEXT,
+            due_date DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            FOREIGN KEY (project_id) REFERENCES {$wpdb->prefix}goalforge_projects(id) ON DELETE CASCADE
+        ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         // Execute SQL
@@ -219,6 +234,7 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
         dbDelta($chat_sql);
         dbDelta($notifications_sql);
         dbDelta($project_users_sql);
+        dbDelta($milestone_sql);
 
 
         // Check if tables exist
@@ -257,7 +273,10 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
             error_log('GoalForge: Failed to create project users table.');
             return false;
         }
-
+         if ($wpdb->get_var("SHOW TABLES LIKE '$milestone_table'") !== $milestone_table) {
+            error_log('GoalForge: Failed to create project users table.');
+            return false;
+        }
 
         return true;
     }

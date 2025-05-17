@@ -57,47 +57,27 @@ class TaskController
     {
         // Validate task ID
         if ($taskId <= 0) {
-            $this->logger->logMessage("Invalid Task ID for update: {$taskId}", 'error');
+           
+            error_log("Invalid Task ID for update: {$taskId}");
             return false;
         }
     
-        
-        // Sanitize and prepare input data
-        $sanitizedData = [];
-        foreach ($updatedData as $key => $value) {
-            if ($key === 'title') {
-                $sanitizedData[$key] = sanitize_text_field($value);
-            } elseif ($key === 'description') {
-                $sanitizedData[$key] = sanitize_textarea_field($value);
-            } elseif ($key === 'due_date') {
-                if (Validation::isValidDate($value)) {
-                    $sanitizedData[$key] = sanitize_text_field($value);
-                } else {
-                    $this->logger->logMessage("Invalid date provided for task ID {$taskId}.", 'error');
-                    return false;
-                }
-            } elseif ($key === 'project_id') {
-                $sanitizedData[$key] = intval($value);
-                if ($sanitizedData[$key] <= 0) {
-                    $this->logger->logMessage("Invalid project ID for task ID {$taskId}.", 'error');
-                    return false;
-                }
-            }
-        }
+
     
         // Check start date and due date logic
-        if (!empty($sanitizedData['start_date']) && !empty($sanitizedData['due_date'])) {
-            if (strtotime($sanitizedData['start_date']) > strtotime($sanitizedData['due_date'])) {
-                $this->logger->logMessage("Start date cannot be after due date for task ID {$taskId}.", 'error');
+        if (!empty($updatedData['start_date']) && !empty($updatedData['due_date'])) {
+            if (strtotime($updatedData['start_date']) > strtotime($updatedData['due_date'])) {
+                error_log("Start date cannot be after due date for task ID {$taskId}.");
                 return false;
             }
         }
         // Delegate to the model for validation and updating
-        $result = $this->taskModel->updateTask($taskId, $sanitizedData);
+        $taskModel = new TaskModel();
+        $result = $taskModel->updateTask($taskId, $updatedData);
     
         // Log errors if update fails
         if (!$result) {
-            $this->logger->logMessage("Failed to update task with ID {$taskId}.", 'error');
+            error_log("Failed to update task with ID {$taskId}.");
             return false;
         }
     
@@ -177,5 +157,5 @@ class TaskController
     //         'project_id' => isset($data['project_id']) ? intval($data['project_id']) : null,
     //     ];
     // }
-
+  
 }

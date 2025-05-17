@@ -8,6 +8,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 use BemaGoalForge\ProjectManagement\ProjectController;
+use BemaGoalForge\TaskManagement\TaskController;
 
 class AdminDashboardController {
 
@@ -48,7 +49,7 @@ class AdminDashboardController {
 
         //Submenu: All Projects
         add_submenu_page(
-            'goalforge_dashboard', 'All Projects', 'Projects',
+            'goalforge-dashboard', 'All Projects', 'Projects',
             'manage_options', 'goalforge_project_list', [self::class, 'renderCreateProjectForm']
         );
 
@@ -61,6 +62,19 @@ class AdminDashboardController {
             null, 'Assign Collaborators', 'Assign Collaborators',
             'edit_posts', 'goalforge_assign_collaborators', [self::class, 'renderAssignCollaborators']
         );
+        add_submenu_page(
+            null,'Edit Task', 'Edit Task',
+            'edit_posts', 'goalforge_edit_task', [self::class, 'renderEditTaskForm']
+        );
+        add_submenu_page(
+            'goalforge-dashboard', 'Milestone Management','Milestones',
+            'manage_options', 'milestone-management', ['BemaGoalForge\MilestoneManagement\MilestoneController', 'renderMilestoneManagement']
+            );
+             add_submenu_page(
+            null, 'Milestone Management','Milestones',
+            'edit_posts', 'goalforge_edit_milestone', ['BemaGoalForge\MilestoneManagement\MilestoneController', 'goalforge_render_edit_milestone_page']
+            );
+
     }
     
     
@@ -744,6 +758,65 @@ public static function renderCreateProjectForm()
 
     //return ob_get_clean();
 }
+public static function renderEditTaskForm()
+{
+    global $wpdb;
+
+    $task_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    $tasks_table = $wpdb->prefix . 'goalforge_tasks';
+
+    $task = $wpdb->get_row($wpdb->prepare("SELECT * FROM $tasks_table WHERE id = %d", $task_id));
+    if (!$task) {
+        echo '<div class="notice notice-error"><p>Task not found.</p></div>';
+        return;
+    }
+
+    $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_projects");
+
+    ?>
+    <div class="wrap">
+        <h1>Edit Task</h1>
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <input type="hidden" name="action" value="goalforge_update_task">
+            <input type="hidden" name="task_id" value="<?php echo esc_attr($task->id); ?>">
+            <?php wp_nonce_field('goalforge_edit_task_nonce', '_wpnonce'); ?>
+
+            <table class="form-table">
+                <tr>
+                    <th><label for="title">Title</label></th>
+                    <td><input name="title" type="text" value="<?php echo esc_attr($task->title); ?>" required></td>
+                </tr>
+                <tr>
+                    <th><label for="description">Description</label></th>
+                    <td><textarea name="description"><?php echo esc_textarea($task->description); ?></textarea></td>
+                </tr>
+                <tr>
+                    <th><label for="start_date">Start Date</label></th>
+                    <td><input name="start_date" type="datetime-local" value="<?php echo esc_attr($task->start_date); ?>"></td>
+                </tr>
+                <tr>
+                    <th><label for="due_date">Due Date</label></th>
+                    <td><input name="due_date" type="datetime-local" value="<?php echo esc_attr($task->due_date); ?>"></td>
+                </tr>
+                <tr>
+                    <th><label for="project_id">Project</label></th>
+                    <td>
+                        <select name="project_id">
+                            <?php foreach ($projects as $proj): ?>
+                                <option value="<?php echo esc_attr($proj->id); ?>" <?php selected($proj->id, $task->project_id); ?>>
+                                    <?php echo esc_html($proj->title); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+
+            <button type="submit" class="button button-primary">Update Task</button>
+        </form>
+    </div>
+    <?php
+}
 
    public static function renderEditProject() {
     if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
@@ -934,7 +1007,40 @@ public static function renderCreateProjectForm()
         }
         exit;
 
-                }
+    }
+
+      public static function handleUpdateTask()
+        {
+            if (!current_user_can('edit_posts') || !check_admin_referer('goalforge_edit_task_nonce')) {
+                wp_die('Unauthorized request');
+            }
+
+            
+
+            $task_id = intval($_POST['task_id']);
+
+            $data = [
+
+            'title' => sanitize_text_field($_POST['title']),
+            'description' => sanitize_textarea_field($_POST['description']),
+            'start_date' => sanitize_text_field($_POST['start_date']),
+            'due_date' => sanitize_text_field($_POST['due_date']),
+            'project_id'=> intval($_POST['project_id']),
+            ];
+
+
+            $controller = new TaskController();
+
+            $updated = $controller->updateTask($task_id, $data);       
+
+            if ($updated !== false) {
+                wp_redirect(admin_url('admin.php?page=goalforge_create_task&updated=1'));
+                exit;
+            } else {
+                wp_redirect(admin_url('admin.php?page=goalforge_create_task&error=1'));
+                exit;
+            }
+        }
 }
 
 // Initialize the Admin Dashboard Controller

@@ -115,6 +115,11 @@ final class GoalForge {
             } 
             exit; 
         }); 
+
+        //update task
+        add_action('admin_post_goalforge_update_task', ['BemaGoalForge\Dashboard\AdminDashboardController', 'handleUpdateTask']);        
+
+
     // Update project        
             add_action('admin_post_goalforge_update_project', function () {
         if (!current_user_can('edit_posts')) wp_die('Unauthorized');
@@ -163,8 +168,17 @@ final class GoalForge {
         wp_redirect(add_query_arg(['assign_status' => $success ? 'success' : 'error'], wp_get_referer()));
         exit;
     });
-    //create task
+   
 
+    // Milestone handler for add
+    add_action('admin_post_goalforge_add_milestone', ['BemaGoalForge\MilestoneManagement\MilestoneController', 'goalforge_handle_add_milestone']);
+
+    // Milestone handler for delete
+    add_action('admin_post_goalforge_delete_milestone', ['BemaGoalForge\MilestoneManagement\MilestoneController','goalforge_handle_delete_milestone']);
+
+    //Milestone handler for Edit
+    add_action('admin_post_goalforge_update_milestone', ['BemaGoalForge\MilestoneManagement\MilestoneController','goalforge_handle_update_milestone']);
+     //create task
     add_action('admin_post_goalforge_create_task', function () {
         if (!current_user_can('manage_options')) {
         wp_die('Unauthorized');
