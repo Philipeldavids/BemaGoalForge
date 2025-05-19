@@ -43,6 +43,7 @@ class TaskModel
                 'due_date' => sanitize_text_field($taskData['due_date']),
                 'reminder_time' => sanitize_text_field($taskData['reminder_time']),
                 'project_id' => intval($taskData['project_id']),
+                'milestone_id' => intval($taskData['milestone_id']),
                 'created_by' => get_current_user_id(),
                 'created_at'   => current_time('mysql'),
                 'updated_at'   => current_time('mysql')
@@ -82,7 +83,7 @@ class TaskModel
             $this->table_name,
             $this->sanitizeTaskData($updatedData),
             ['id' => $taskId],
-            ['%s', '%s', '%s', '%d','%d'], // Data types for fields being updated
+            ['%s', '%s', '%s', '%d','%d','%d'], // Data types for fields being updated
             ['%d'] // Data type for the WHERE clause
         );
 
@@ -237,6 +238,7 @@ class TaskModel
                                 ? sanitize_text_field($taskData['due_date'])
                                 : null,
             'project_id' => isset($taskData['project_id']) ? intval($taskData['project_id']) : null,
+            'milestone_id' => isset($taskData['milestone_id']) ? intval($taskData['milestone_id']) : null,
             'created_at'   => $taskData['created_at'] ?? current_time('mysql'),
             'updated_at'   => current_time('mysql'),
         ];

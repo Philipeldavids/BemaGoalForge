@@ -127,6 +127,7 @@ final class DatabaseHandler
         due_date DATETIME NOT NULL,
         reminder_time VARCHAR(50),
         project_id BIGINT(20) UNSIGNED,
+        milestone_id BIGINT(20) UNSIGNED,
         created_by BIGINT(20) UNSIGNED,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -222,6 +223,33 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
             FOREIGN KEY (project_id) REFERENCES {$wpdb->prefix}goalforge_projects(id) ON DELETE CASCADE
         ) $charset_collate;";
 
+        $assignee_table = $wpdb->prefix . 'goalforge_task_assignees';   
+
+        $assignee_sql = "CREATE TABLE IF NOT EXISTS $assignee_table (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            task_id BIGINT(20) UNSIGNED NOT NULL,
+            user_id BIGINT(20) UNSIGNED NOT NULL,
+            assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY task_user_unique (task_id, user_id)
+        ) $charset_collate;";
+
+        $checklist_table = $wpdb->prefix . 'goalforge_task_checklists';
+
+        $checklist_sql = "CREATE TABLE IF NOT EXISTS $checklist_table (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            task_id BIGINT(20) UNSIGNED NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            is_completed TINYINT(1) DEFAULT 0,
+            completed_by BIGINT(20) UNSIGNED DEFAULT NULL,
+            completed_at DATETIME DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY task_id (task_id),
+            KEY completed_by (completed_by)
+        ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         // Execute SQL
@@ -235,6 +263,8 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
         dbDelta($notifications_sql);
         dbDelta($project_users_sql);
         dbDelta($milestone_sql);
+        dbDelta($assignee_sql);
+        dbDelta($checklist_sql);
 
 
         // Check if tables exist
@@ -274,7 +304,15 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
             return false;
         }
          if ($wpdb->get_var("SHOW TABLES LIKE '$milestone_table'") !== $milestone_table) {
-            error_log('GoalForge: Failed to create project users table.');
+            error_log('GoalForge: Failed to create milestone table.');
+            return false;
+        }
+         if ($wpdb->get_var("SHOW TABLES LIKE '$assignee_table'") !== $assignee_table) {
+            error_log('GoalForge: Failed to create assignee table.');
+            return false;
+        }
+         if ($wpdb->get_var("SHOW TABLES LIKE '$checklist_table'") !== $checklist_table) {
+            error_log('GoalForge: Failed to create assignee table.');
             return false;
         }
 
@@ -300,7 +338,9 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
             $wpdb->prefix . 'goalforge_tasks',          // Independent table
             $wpdb->prefix . 'goalforge_user_departments',    // Independent table
             $wpdb->prefix . 'goalforge_projects',       // Primary table
-             $wpdb->prefix . '$project_users_table'
+             $wpdb->prefix . '$project_users_table',
+             $wpdb->prefix . '$milestone_table',
+             $wpdb->prefix . '$assignee_table'
         ];
     
         foreach ($tables as $table_name) {

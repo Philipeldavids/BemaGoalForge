@@ -70,11 +70,22 @@ class AdminDashboardController {
             'goalforge-dashboard', 'Milestone Management','Milestones',
             'manage_options', 'milestone-management', ['BemaGoalForge\MilestoneManagement\MilestoneController', 'renderMilestoneManagement']
             );
-             add_submenu_page(
-            null, 'Milestone Management','Milestones',
-            'edit_posts', 'goalforge_edit_milestone', ['BemaGoalForge\MilestoneManagement\MilestoneController', 'goalforge_render_edit_milestone_page']
+        add_submenu_page(
+        null, 'Milestone Management','Milestones',
+        'edit_posts', 'goalforge_edit_milestone', ['BemaGoalForge\MilestoneManagement\MilestoneController', 'goalforge_render_edit_milestone_page']
+        );
+        add_submenu_page(
+            'goalforge-dashboard',  'Manage Checklists',
+            'Checklists', 'manage_options', 'create-checklist', ['BemaGoalForge\ChecklistManagement\ChecklistController', 'renderManageChecklists']
+        );
+        // add_submenu_page(
+        //     null, 'Create Checklist', 'Create Checklist',
+        //     'manage_options', 'create-checklist', ['BemaGoalForge\ChecklistManagement\ChecklistController', 'renderManageChecklists']
+        //     );
+        add_submenu_page(
+            null, 'Edit Checklist', 'Edit Checklist',
+            'manage_options', 'edit-checklist', ['BemaGoalForge\ChecklistManagement\ChecklistController', 'renderEditChecklist']
             );
-
     }
     
     
@@ -85,14 +96,16 @@ class AdminDashboardController {
 
     $tasks_table = $wpdb->prefix . 'goalforge_tasks';
     $projects_table = $wpdb->prefix . 'goalforge_projects';
+    $milestone_table = $wpdb->prefix . 'goalforge_milestones';
     $project_users_table = $wpdb->prefix . 'goalforge_project_users';
     $users_table = $wpdb->prefix . 'users';
 
     // Fetch tasks with project title
     $tasks = $wpdb->get_results("
-        SELECT t.*, p.title AS project_title
+        SELECT t.*, p.title AS project_title, m.title AS milestone_title
         FROM $tasks_table t
         LEFT JOIN $projects_table p ON t.project_id = p.id
+        LEFT JOIN $milestone_table M on t.milestone_id = m.id
     ");
 
     // Fetch collaborators with project info
@@ -143,6 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <th>Title</th>
                 <th>Description</th>
                 <th>Project</th>
+                <th>Milestone</th>
                 <th>Due Date</th>
             </tr>
         </thead>
@@ -152,6 +166,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${task.title}</td>
                     <td>${task.description || ''}</td>
                     <td>${task.project_title || '—'}</td>
+                    <td>${task.milestone_title || '—'}</td>
                     <td>${task.due_date ? new Date(task.due_date).toLocaleString() : '—'}</td>
                 </tr>
             `).join('')}
@@ -489,26 +504,21 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
     public static function renderCreateTaskForm() {
        // Handle project filter if present
         global $wpdb;
-
+        $users = get_users();
     $project_id_filter = isset($_GET['project_id']) ? intval($_GET['project_id']) : 0;
-
-    // <?php $tasks_table = $wpdb->prefix . 'goalforge_tasks'; 
-    // $query = "SELECT * FROM $tasks_table"; 
-    // if (!empty($project_id_filter)) { 
-    //     $query .= $wpdb->prepare(" WHERE project_id = %d", $project_id_filter); } 
-    // $tasks = $wpdb->get_results($query);  
-
-
+    
+   
     $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_projects");
-
+    $milestones = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_milestones");
     $query = '';
     if (!empty($project_id_filter)) { 
     $query .= $wpdb->prepare(" WHERE project_id = %d", $project_id_filter); } 
 
     $tasks = $wpdb->get_results("
-        SELECT t.*, p.title AS project_title
+        SELECT t.*, p.title AS project_title, m.title AS milestone_title
         FROM {$wpdb->prefix}goalforge_tasks t
         LEFT JOIN {$wpdb->prefix}goalforge_projects p ON t.project_id = p.id
+        LEFT JOIN {$wpdb->prefix}goalforge_milestones m ON t.milestone_id = m.id
         $query
         ORDER BY t.due_date DESC
     ");
@@ -569,6 +579,17 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
                     </select>
                 </td>
             </tr>
+            <tr>
+                <th><label for="milestone-id">Assign to Milestone</label></th>
+                <td>
+                    <select id="milestone-id" name="milestone_id">
+                        <option value="">-- None --</option>
+                        <?php foreach ($milestones as $milestone): ?>
+                            <option value="<?php echo esc_attr($milestone->id); ?>"><?php echo esc_html($milestone->title); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
         </table>
         <button type="submit" class="button button-primary">Create Task</button>
     </form>
@@ -595,6 +616,7 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
                 <th>Title</th>
                 <th>Due Date</th>
                 <th>Project</th>
+                <th>Milestone</th>
                 <th>Reminder</th>
                 <th>Action</th>
             </tr>
@@ -606,22 +628,46 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
                         <td><?php echo esc_html($task->title); ?></td>
                         <td><?php echo esc_html(date('Y-m-d H:i', strtotime($task->due_date))); ?></td>
                         <td><?php echo esc_html($task->project_title); ?></td>
+                        <td><?php echo esc_html($task->milestone_title); ?></td>
                         <td><?php echo esc_html($task->reminder_time ?: '—'); ?></td>
                         <td>
                             <a href="<?php echo admin_url('admin.php?page=goalforge_edit_task&id=' . intval($task->id)); ?>">✏️ Edit</a> |
                             <a href="<?php echo wp_nonce_url(admin_url('admin-post.php?action=goalforge_delete_task&task_id=' . intval($task->id)), 'goalforge_delete_task_action'); ?>"
                             onclick="return confirm('Are you sure you want to delete this task?');">🗑️ Delete</a>
                         </td>
-
+                        <td>
+                            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                                <input type="hidden" name="action" value="goalforge_assign_user_to_task">
+                                <input type="hidden" name="task_id" value="<?php echo esc_attr(intval($task->id)); ?>">
+                                <?php wp_nonce_field('assign_user_to_task', '_wpnonce'); ?>
+                                <select name="user_id" required>
+                                    <option value="">Assign to user</option>
+                                    <?php foreach ($users as $user): ?>
+                                        <option value="<?php echo esc_attr($user->ID); ?>">
+                                            <?php echo esc_html($user->display_name); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button class="button">Assign</button>
+                            </form>
+                        </td>
+                        
                     </tr>
                 <?php endforeach; ?>
             <?php else : ?>
                 <tr><td colspan="4">No tasks found.</td></tr>
             <?php endif; ?>
         </tbody>
-    </table>
+</table>
+ 
 </div>
 <?php
+   $assigned = $wpdb->get_results($wpdb->prepare(
+    "SELECT u.display_name FROM {$wpdb->prefix}goalforge_task_assignees a 
+     JOIN {$wpdb->users} u ON a.user_id = u.ID 
+     WHERE a.task_id = %d", intval($task->id)
+));
+echo implode(', ', wp_list_pluck($assigned, 'display_name'));
 
     }
     
@@ -772,6 +818,7 @@ public static function renderEditTaskForm()
     }
 
     $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_projects");
+     $milestones = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_milestones");
 
     ?>
     <div class="wrap">
@@ -805,6 +852,18 @@ public static function renderEditTaskForm()
                             <?php foreach ($projects as $proj): ?>
                                 <option value="<?php echo esc_attr($proj->id); ?>" <?php selected($proj->id, $task->project_id); ?>>
                                     <?php echo esc_html($proj->title); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="project_id">Milestone</label></th>
+                    <td>
+                        <select name="milestone_id">
+                            <?php foreach ($milestones as $mile): ?>
+                                <option value="<?php echo esc_attr($mile->id); ?>" <?php selected($mile->id, $task->milestone_id); ?>>
+                                    <?php echo esc_html($mile->title); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -1026,6 +1085,7 @@ public static function renderEditTaskForm()
             'start_date' => sanitize_text_field($_POST['start_date']),
             'due_date' => sanitize_text_field($_POST['due_date']),
             'project_id'=> intval($_POST['project_id']),
+            'milestone_id'=> intval($_POST['milestone_id'])
             ];
 
 

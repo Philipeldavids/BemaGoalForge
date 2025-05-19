@@ -169,6 +169,8 @@ final class GoalForge {
         exit;
     });
    
+    //Assign user to task
+    add_action('admin_post_goalforge_assign_user_to_task', ['BemaGoalForge\TaskManagement\TaskController', 'assignUserToTask']);
 
     // Milestone handler for add
     add_action('admin_post_goalforge_add_milestone', ['BemaGoalForge\MilestoneManagement\MilestoneController', 'goalforge_handle_add_milestone']);
@@ -178,7 +180,15 @@ final class GoalForge {
 
     //Milestone handler for Edit
     add_action('admin_post_goalforge_update_milestone', ['BemaGoalForge\MilestoneManagement\MilestoneController','goalforge_handle_update_milestone']);
-     //create task
+     
+     //Delete checklist
+     add_action('admin_post_delete_checklist', ['BemaGoalForge\ChecklistManagement\ChecklistController', 'handleDeleteChecklist']);
+   
+    //edit checklist
+    add_action('admin_post_edit_checklist', ['BemaGoalForge\ChecklistManagement\ChecklistController', 'handleEditChecklist']);
+     //create checklist
+    add_action('admin_post_create_checklist', ['BemaGoalForge\ChecklistManagement\ChecklistController', 'handleCreateChecklist']);
+    //create task
     add_action('admin_post_goalforge_create_task', function () {
         if (!current_user_can('manage_options')) {
         wp_die('Unauthorized');
@@ -191,6 +201,7 @@ final class GoalForge {
                 'start_date' => sanitize_text_field($_POST['task_start_date']),
                 'due_date' => sanitize_text_field($_POST['task_due_date']),
                 'reminder_time' => sanitize_text_field($_POST['task_reminder_time']),
+                'milestone_id' => intval($_POST['milestone_id']),
                 'project_id' => intval($_POST['project_id']),
                 'created_by' => get_current_user_id(),
             ];
@@ -233,7 +244,8 @@ final class GoalForge {
         
         add_action('wp_enqueue_scripts', [$this, 'enqueueFrontendAssets']); 
         // Register shortcode 
-        
+        add_shortcode('goalforge_user_dashboard', ['BemaGoalForge\Dashboard\UserDashboardController', 'renderUserDashboard']);
+
         add_shortcode('goalforge_project_form', ['\BemaGoalForge\ProjectManagement\Shortcodes', 'renderProjectForm']); 
         
         add_shortcode('goalforge_project_dashboard', ['\BemaGoalForge\Shortcodes\ShortcodeRenderer', 'renderProjectDashboard']); 

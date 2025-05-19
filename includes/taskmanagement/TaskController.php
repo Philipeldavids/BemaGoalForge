@@ -157,5 +157,25 @@ class TaskController
     //         'project_id' => isset($data['project_id']) ? intval($data['project_id']) : null,
     //     ];
     // }
-  
+  public static function assignUserToTask() {
+        if (!current_user_can('edit_posts') || !check_admin_referer('assign_user_to_task', '_wpnonce')) {
+            wp_die('Unauthorized request');
+        }
+
+        global $wpdb;
+        $task_id = intval($_POST['task_id']);
+        $user_id = intval($_POST['user_id']);
+        $table = $wpdb->prefix . 'goalforge_task_assignees';
+
+        if ($task_id && $user_id) {
+            $wpdb->replace($table, [
+                'task_id' => $task_id,
+                'user_id' => $user_id,
+            ]);
+        }
+
+        wp_redirect(add_query_arg(['page' => 'goalforge_create_task', 'assigned' => 1], admin_url('admin.php')));
+        exit;
+    }
+
 }
