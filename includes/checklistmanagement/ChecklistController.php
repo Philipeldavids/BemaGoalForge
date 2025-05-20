@@ -242,7 +242,7 @@ $wpdb->update(
     ['id' => $id]
 );
 
-wp_redirect(admin_url('admin.php?page=create-checklists&updated=1'));
+wp_redirect(admin_url('admin.php?page=create-checklist&updated=1'));
 exit;
 
 }
@@ -258,7 +258,7 @@ exit;
 
             global $wpdb;
             $wpdb->delete("{$wpdb->prefix}goalforge_checklists", ['id' => intval($_GET['id'])]);
-            wp_redirect(admin_url('admin.php?page=create-checklists&deleted=1'));
+            wp_redirect(admin_url('admin.php?page=create-checklist&deleted=1'));
             exit;
         }
 
