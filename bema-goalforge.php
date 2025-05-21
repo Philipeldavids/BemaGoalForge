@@ -164,6 +164,10 @@ final class GoalForge {
 
         $controller = new \BemaGoalForge\ProjectManagement\ProjectController();
         $success = $controller->updateCollaborators($project_id, $collaborators);
+        foreach($collaborators as $collaboratorId){
+             Notification\NotificationModel::send_assignment_email($collaboratorId, 'project', $project_id);
+        }
+       
 
         wp_redirect(add_query_arg(['assign_status' => $success ? 'success' : 'error'], wp_get_referer()));
         exit;

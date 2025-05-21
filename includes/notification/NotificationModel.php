@@ -6,6 +6,8 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
+use BemaGoalForge\TaskManagement\TaskModel;
+use BemaGoalForge\ProjectManagement\ProjectModel;
 class NotificationModel
 {
     /**
@@ -49,4 +51,30 @@ class NotificationModel
 
         return true;
     }
+
+public static function send_assignment_email($user_id, $context = 'task', $context_id = 0)
+{
+    $user = get_user_by('id', $user_id);
+    if (!$user || !$user->user_email) {
+        return;
+    }
+
+    $subject = '';
+    $message = '';
+
+     if ($context === 'task') {
+        $task = TaskModel::get_task_by_id($context_id); // You need to implement this
+         if (!$task) return;
+        $subject = 'You have been assigned a new task';
+        $message = "Hi {$user->display_name},\n\nYou’ve been assigned a new task: \"{$task->title}\".";
+    } elseif ($context === 'project') {
+        $project = ProjectModel::get_project_by_id($context_id); // Implement as needed
+         if (!$project) return;
+        $subject = 'You have been added to a new project';
+        $message = "Hi {$user->display_name},\n\nYou’ve been added to the project: \"{$project->title}\".";
+    }
+
+    wp_mail($user->user_email, $subject, $message);
+}
+
 }

@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
 
 
 use BemaGoalForge\TaskManagement\TaskModel;
-
+use BemaGoalForge\Notification\NotificationModel;
 class TaskController
 {
   
@@ -172,8 +172,9 @@ class TaskController
                 'task_id' => $task_id,
                 'user_id' => $user_id,
             ]);
+           NotificationModel::send_assignment_email($user_id, 'task', $task_id);
         }
-
+        
         wp_redirect(add_query_arg(['page' => 'goalforge_create_task', 'assigned' => 1], admin_url('admin.php')));
         exit;
     }

@@ -90,5 +90,14 @@ class ProjectModel
         return true;
     }
     
-    
+    public static function get_project_by_id($project_id) {
+    global $wpdb;
+
+    $table = "{$wpdb->prefix}goalforge_projects";
+
+    return $wpdb->get_row(
+    $wpdb->prepare("SELECT * FROM $table WHERE id = %d", $project_id)
+    );
+}
+
 }

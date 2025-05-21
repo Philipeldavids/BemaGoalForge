@@ -250,5 +250,15 @@ class TaskModel
         return $sanitizedData;
     }
 
+    public static function get_task_by_id($task_id) {
+    global $wpdb;
 
+    $table = "{$wpdb->prefix}goalforge_tasks";
+
+    return $wpdb->get_row(
+    $wpdb->prepare("SELECT * FROM $table WHERE id = %d", $task_id)
+);
+
+
+    }
 }
