@@ -77,4 +77,20 @@ public static function send_assignment_email($user_id, $context = 'task', $conte
     wp_mail($user->user_email, $subject, $message);
 }
 
+public static function send_reminder_email($user_id, $data, $context = 'task')
+{
+    $user = get_user_by('id', $user_id);
+    if (!$user || !$user->user_email) return;
+
+    if ($context === 'task') {
+        $subject = 'Task Reminder: ' . $data->title;
+        $message = "Hi {$user->display_name},\n\nThis is a reminder for your task:\n\"{$data->title}\"\nDue: {$data->due_date}";
+    } else {
+        $subject = 'Project Reminder: ' . $data->title;
+        $message = "Hi {$user->display_name},\n\nThis is a reminder for the project:\n\"{$data->title}\"\nDue: {$data->due_date}";
+    }
+
+    wp_mail($user->user_email, $subject, $message);
+}
+
 }

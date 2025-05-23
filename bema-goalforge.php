@@ -16,6 +16,7 @@ use BemaGoalForge\Core\PluginActivator;
 use BemaGoalForge\Core\PluginDeactivator; 
 use BemaGoalForge\Core\PluginUninstaller; 
 use BemaGoalForge\Dashboard\AdminDashboardController; 
+use BemaGoalForge\Feedback\ChatController;
 use BemaGoalForge\Dashboard\PublicDashboardController; 
 use BemaGoalForge\Utilities\Logger; 
 use BemaGoalForge\Utilities\Tester; 
@@ -173,6 +174,11 @@ final class GoalForge {
         exit;
     });
    
+    // Chat bot 
+   add_action('wp_ajax_goalforge_chatbot_query', ['BemaGoalForge\Feedback\ChatController', 'handleChatbotQuery']);
+    add_action('wp_ajax_nopriv_goalforge_chatbot_query', ['BemaGoalForge\Feedback\ChatController', 'handleChatbotQuery']);
+
+
     //Assign user to task
     add_action('admin_post_goalforge_assign_user_to_task', ['BemaGoalForge\TaskManagement\TaskController', 'assignUserToTask']);
 
@@ -244,11 +250,26 @@ final class GoalForge {
             exit;
         });
 
+        // Hook the cron task callback
+
+        add_filter('cron_schedules', function ($schedules) {
+            $schedules['five_minutes'] = [
+                'interval' => 5 * 60, // 5 minutes in seconds
+                'display'  => __('Every Five Minutes')
+            ];
+            return $schedules;
+        });
+
+        add_action('goalforge_cron_task', ['BemaGoalForge\TaskManagement\Scheduler', 'runScheduledTask']);
+
         // Enqueue frontend form styles 
         
         add_action('wp_enqueue_scripts', [$this, 'enqueueFrontendAssets']); 
-        // Register shortcode 
+        // Register shortcode for user view
         add_shortcode('goalforge_user_dashboard', ['BemaGoalForge\Dashboard\UserDashboardController', 'renderUserDashboard']);
+        //Register shortcode for chatbot
+
+        add_shortcode('goalforge_chatbot', ['BemaGoalForge\Feedback\ChatController', 'renderChatbot']);
 
         add_shortcode('goalforge_project_form', ['\BemaGoalForge\ProjectManagement\Shortcodes', 'renderProjectForm']); 
         

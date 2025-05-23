@@ -75,10 +75,11 @@ class ProjectModel
                 'title'       => sanitize_text_field($updatedData['title']),
                 'description' => sanitize_textarea_field($updatedData['description']),
                 'due_date'    => sanitize_text_field($updatedData['due_date']),
+                'reminder_time' => sanitize_text_field($updatedData['reminder_time']),
                 'updated_at'  => current_time('mysql'),
             ],
             ['id' => $projectId], // Where clause
-            ['%s', '%s', '%s', '%s'], // Data format
+            ['%s', '%s', '%s', '%s', '%s'], // Data format
             ['%d'] // Where clause format
         );
     
