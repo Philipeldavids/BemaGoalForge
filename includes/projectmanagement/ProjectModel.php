@@ -28,9 +28,11 @@ class ProjectModel
                 'start_date'  => sanitize_text_field($projectData['start_date']),
                 'due_date'    => sanitize_text_field($projectData['due_date']),
                 'reminder_time' => sanitize_text_field($projectData['reminder_time']),
+                'department' => sanitize_text_field($projectData['department']),
                 'created_by'    => sanitize_text_field($projectData['created_by']),
+                'status' => sanitize_text_field($projectData['status'])
             ],
-            ['%s', '%s', '%s', '%s', '%s', '%s']
+            ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
         );
 
         if ($result === false) {    
@@ -75,11 +77,13 @@ class ProjectModel
                 'title'       => sanitize_text_field($updatedData['title']),
                 'description' => sanitize_textarea_field($updatedData['description']),
                 'due_date'    => sanitize_text_field($updatedData['due_date']),
+                'department' => sanitize_text_field($updatedData['department']),
                 'reminder_time' => sanitize_text_field($updatedData['reminder_time']),
                 'updated_at'  => current_time('mysql'),
+                'status' => sanitize_text_field($updatedData['status'])
             ],
             ['id' => $projectId], // Where clause
-            ['%s', '%s', '%s', '%s', '%s'], // Data format
+            ['%s', '%s', '%s', '%s', '%s', '%s', '%s'], // Data format
             ['%d'] // Where clause format
         );
     
@@ -90,7 +94,38 @@ class ProjectModel
     
         return true;
     }
-    
+    public static function delete_project_by_id($project_id) {
+
+
+        //$project_id = intval($_POST['project_id']);
+
+        global $wpdb;
+        $project_table = "{$wpdb->prefix}goalforge_projects";
+        $task_table = "{$wpdb->prefix}goalforge_tasks";
+        $collaborator_table = "{$wpdb->prefix}goalforge_project_users";
+        $assignee_table = "{$wpdb->prefix}goalforge_task_assignees";
+
+        // Delete task assignees
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE a FROM $assignee_table a
+                INNER JOIN $task_table t ON a.task_id = t.id
+                WHERE t.project_id = %d",
+                $project_id
+            )
+        );
+
+        // Delete tasks
+        $wpdb->delete($task_table, ['project_id' => $project_id]);
+
+        // Delete collaborators
+        $wpdb->delete($collaborator_table, ['project_id' => $project_id]);
+
+        // Delete the project itself
+        $wpdb->delete($project_table, ['id' => $project_id]) !== false;
+       
+
+}
     public static function get_project_by_id($project_id) {
     global $wpdb;
 

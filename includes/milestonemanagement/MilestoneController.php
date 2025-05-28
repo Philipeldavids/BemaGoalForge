@@ -103,8 +103,18 @@ $projects = $wpdb->get_results("SELECT id, title FROM $projects_table", ARRAY_A)
                 <td><textarea name="description" id="description" rows="3"></textarea></td>
             </tr>
             <tr>
-                <th><label for="due_date">Due Date</label></th>
-                <td><input type="date" name="due_date" id="due_date" required></td>
+                <th><label for="milestone-status">Status</label></th>
+                <td>
+                    <select id="milestone-status" name="milestone_status">
+                        <option value="not_started">Not Started</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="due_date">Date</label></th>
+                <td><input type="datetime-local" name="due_date" id="due_date" required></td>
             </tr>
         </table>
         <p><button type="submit" class="button button-primary">Add Milestone</button></p>
@@ -118,6 +128,7 @@ $projects = $wpdb->get_results("SELECT id, title FROM $projects_table", ARRAY_A)
                 <th>Title</th>
                 <th>Description</th>
                 <th>Due Date</th>
+                <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -129,6 +140,17 @@ $projects = $wpdb->get_results("SELECT id, title FROM $projects_table", ARRAY_A)
                         <td><?php echo esc_html($ms->title); ?></td>
                         <td><?php echo esc_html($ms->description); ?></td>
                         <td><?php echo esc_html(date('Y-m-d', strtotime($ms->due_date))); ?></td>
+                        <td><?php $status_class = match ($ms->status) 
+                        { 
+                            'in_progress' => 'goalforge-status-in-progress', 
+                            'done' => 'goalforge-status-done', 
+                            default => 'goalforge-status-not-started', 
+                        }; $status_label = match ($ms->status) 
+                        { 'in_progress' => 'In Progress', 
+                            'done' => 'Done', 
+                            default => 'Not Started',
+                         }; 
+                        echo '<span class="goalforge-status-badge ' . esc_attr($status_class) . '">' . esc_html($status_label) . '</span>'; ?>
                         <td>
                             <a href="<?php echo admin_url('admin.php?page=goalforge_edit_milestone&id=' . $ms->id); ?>" class="button small">Edit</a>
                             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
@@ -146,6 +168,10 @@ $projects = $wpdb->get_results("SELECT id, title FROM $projects_table", ARRAY_A)
         </tbody>
     </table>
 </div>
+<style> .goalforge-status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; color: white; font-weight: bold; } 
+.goalforge-status-not-started { background-color: #999; } 
+.goalforge-status-in-progress { background-color: #f39c12; } 
+.goalforge-status-done { background-color: #27ae60; } </style>
 <?php
 
 }
@@ -192,7 +218,17 @@ public static function goalforge_render_edit_milestone_page() {
                     <td><textarea name="description" id="description"><?php echo esc_textarea($milestone->description); ?></textarea></td>
                 </tr>
                 <tr>
-                    <th><label for="due_date">Due Date</label></th>
+                    <th><label for="milestone-status">Status</label></th>
+                    <td>
+                        <select id="milestone-status" name="milestone_status">
+                            <option value="not_started" <?php selected($milestone->status, 'not_started'); ?>>Not Started</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="done">Done</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="due_date">Date</label></th>
                     <td><input type="date" name="due_date" id="due_date" value="<?php echo esc_attr($milestone->due_date); ?>" required></td>
                 </tr>
             </table>
@@ -214,6 +250,7 @@ public static function goalforge_handle_add_milestone() {
     $title = sanitize_text_field($_POST['title'] ?? '');
     $description = sanitize_textarea_field($_POST['description'] ?? '');
     $due_date = sanitize_text_field($_POST['due_date'] ?? '');
+    $status = sanitize_text_field($_POST['milestone_status'] ?? 'not_started');
 
     if ($project_id <= 0 || empty($title)) {
     wp_redirect(add_query_arg('error', 'invalid_input', wp_get_referer()));
@@ -225,7 +262,8 @@ public static function goalforge_handle_add_milestone() {
             'project_id' => $project_id,
             'title' => $title,
             'description' => $description,
-            'due_date' => $due_date
+            'due_date' => $due_date,
+            'status' => $status
         ]);
     }
 
@@ -277,6 +315,7 @@ public static function goalforge_handle_update_milestone() {
     $title = sanitize_text_field($_POST['title']);
     $description = sanitize_textarea_field($_POST['description']);
     $due_date = sanitize_text_field($_POST['due_date']);
+    $status = sanitize_text_field($_POST['milestone_status'] ?? 'not_started');
 
     if ($milestone_id <= 0 || empty($title)) {
     wp_redirect(add_query_arg('error', 'invalid_input', wp_get_referer()));
@@ -287,7 +326,8 @@ public static function goalforge_handle_update_milestone() {
         'project_id' => $project_id,
         'title' => $title,
         'description' => $description,
-        'due_date' => $due_date
+        'due_date' => $due_date,
+        'status' => $status
     ], ['id' => $milestone_id]);
 
 

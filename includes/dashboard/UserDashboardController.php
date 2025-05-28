@@ -158,7 +158,27 @@ ob_start();
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
+            <div class="goalforge-task-status">
+            <form class="goalforge-status-form" data-task-id="<?php echo $task->id; ?>">
+                <label>Status:</label>
+                <select name="status">
+                    <option value="todo" <?php selected($task->status, 'todo'); ?>>To Do</option>
+                    <option value="in_progress" <?php selected($task->status, 'in_progress'); ?>>In Progress</option>
+                    <option value="done" <?php selected($task->status, 'done'); ?>>Done</option>
+                </select>
+            </form>
+            </div>
+            <div class="goalforge-comments" data-task-id="<?php echo $task->id; ?>"> 
+            <h4>Comments</h4> 
+            <ul class="comments-list" id="comments-for-<?php echo $task->id; ?>">
+                <?php $comments = self::goalforge_get_task_comments_tree($task->id); echo self::goalforge_render_comments($comments); ?> 
+            </ul>
+            <textarea class="comment-text" placeholder="Add a comment..."></textarea>
+            <button class="add-comment-btn" data-task-id="<?php echo $task->id; ?>">Post</button>
+            </div>
+        
         </div>
+                        
     <?php endforeach; ?>
 
     <div class="goalforge-card">
@@ -182,9 +202,66 @@ ob_start();
                 <?php else : ?> 
         <p>No bonuses yet.</p> <?php endif; ?> </div>
 </div>
+
+
 <?php
 return ob_get_clean();
 
 }
 
+public static function goalforge_get_task_comments_tree($task_id, $parent_id = null) {
+   
+    global $wpdb;
+    $comments_table = $wpdb->prefix . 'goalforge_task_comments';
+
+   if (is_null($parent_id)) {
+    $query = $wpdb->prepare(
+        "SELECT c.*, u.display_name 
+         FROM $comments_table c 
+         JOIN $wpdb->users u ON c.user_id = u.ID 
+         WHERE c.task_id = %d AND c.parent_id IS NULL
+         ORDER BY c.created_at ASC",
+        $task_id
+    );
+} else {
+    $query = $wpdb->prepare(
+        "SELECT c.*, u.display_name 
+         FROM $comments_table c 
+         JOIN $wpdb->users u ON c.user_id = u.ID 
+         WHERE c.task_id = %d AND c.parent_id = %d
+         ORDER BY c.created_at ASC",
+        $task_id, $parent_id
+    );
+}
+
+
+    $comments = $wpdb->get_results($query);
+
+    foreach ($comments as &$comment) {
+        $comment->replies = self::goalforge_get_task_comments_tree($task_id, $comment->id);
+    }
+
+    return $comments;
+}
+
+public static function goalforge_render_comments($comments, $parent_author = null) {
+    $output = '<ul class="goalforge-comments">';
+    foreach ($comments as $comment) {
+        $reply_tag = $parent_author ? '<span class="replying-to">Replying to <strong>' . esc_html($parent_author) . '</strong></span><br>' : '';
+        $output .= '<li>';
+        $output .= '<div class="comment-meta"><strong>' . esc_html($comment->display_name) . '</strong> - <small>' . esc_html($comment->created_at) . '</small></div>';
+        $output .= '<div class="comment-body">' . $reply_tag . esc_html($comment->content) . '</div>';
+        $output .= '<button class="reply-btn" data-parent-id="' . $comment->id . '">Reply</button>';
+        $output .= '<div class="reply-form" data-parent-id="' . $comment->id . '" style="display:none;">
+                        <textarea class="reply-text"></textarea>
+                        <button class="submit-reply-btn" data-task-id="' . $comment->task_id . '" data-parent-id="' . $comment->id . '">Submit</button>
+                    </div>';
+        if (!empty($comment->replies)) {
+            $output .= self::goalforge_render_comments($comment->replies, $comment->display_name); // pass parent name
+        }
+        $output .= '</li>';
+    }
+    $output .= '</ul>';
+    return $output;
+}
 }

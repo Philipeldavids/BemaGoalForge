@@ -127,4 +127,28 @@ class ProjectController {
         $table = $wpdb->prefix . 'goalforge_projects';
         return (int) $wpdb->get_var("SELECT COUNT(*) FROM $table");
     }
+
+    public static function delete_project() {
+    // Verify nonce
+    if (!isset($_POST['goalforge_nonce']) || !wp_verify_nonce($_POST['goalforge_nonce'], 'goalforge_delete_project_action')) {
+    wp_die('Security check failed');
+    }
+
+        // Validate and sanitize project ID
+    $project_id = isset($_POST['project_id']) ? intval($_POST['project_id']) : 0;
+
+    if (!$project_id || !current_user_can('delete_posts')) {
+        wp_die('You do not have permission to delete this project.');
+    }
+
+    // Perform deletion (you can extend this method to also delete related tasks, collaborators, etc.)
+    $deleted = ProjectModel::delete_project_by_id($project_id);
+
+    // Redirect back with status
+    $redirect_url = admin_url('admin.php?page=create-project');
+    $redirect_url = add_query_arg('deleted', $deleted ? '1' : '0', $redirect_url);
+    wp_redirect($redirect_url);
+    exit;
+}
+
 }

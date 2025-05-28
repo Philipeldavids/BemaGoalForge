@@ -41,17 +41,17 @@ class AdminDashboardController {
             'manage_options', 'goalforge_create_task', [self::class, 'renderCreateTaskForm']
         );
     
-        // Submenu: Create Project
+        //Submenu: Create Project
         add_submenu_page(
             'goalforge-dashboard', 'Create Project', 'Create Project',
             'manage_options', 'create-project', [self::class, 'renderCreateProjectForm']
         );
 
         //Submenu: All Projects
-        add_submenu_page(
-            'goalforge-dashboard', 'All Projects', 'Projects',
-            'manage_options', 'goalforge_project_list', [self::class, 'renderCreateProjectForm']
-        );
+        // add_submenu_page(
+        //     'goalforge-dashboard', 'All Projects', 'Create Project',
+        //     'manage_options', 'goalforge_project_list', [self::class, 'renderCreateProjectForm']
+        // );
 
         add_submenu_page(
             null, 'Edit Project', 'Edit Project',
@@ -151,15 +151,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const taskTable = document.createElement("table");
     taskTable.className = "widefat fixed striped";
     taskTable.innerHTML = `
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Project</th>
-                <th>Milestone</th>
-                <th>Due Date</th>
-            </tr>
-        </thead>
+     <thead> 
+     <tr> 
+     <th>Title</th> 
+     <th>Description</th> 
+     <th>Project</th> 
+     <th>Milestone</th> 
+     <th>Due Date</th> 
+     <th>Status</th>
+     </tr> 
+     </thead>
         <tbody>
             ${tasks.map(task => `
                 <tr>
@@ -168,6 +169,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${task.project_title || '—'}</td>
                     <td>${task.milestone_title || '—'}</td>
                     <td>${task.due_date ? new Date(task.due_date).toLocaleString() : '—'}</td>
+                    <td>${task.status ? task.status.replace('_', ' ') : '—'}</td>
                 </tr>
             `).join('')}
         </tbody>
@@ -569,6 +571,16 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
                 </td>
             </tr>
             <tr>
+                <th><label for="task-status">Status</label></th>
+                <td>
+                    <select id="task-status" name="task_status" required>
+                        <option value="todo">To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
                 <th><label for="project-id">Assign to Project</label></th>
                 <td>
                     <select id="project-id" name="project_id">
@@ -618,6 +630,7 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
                 <th>Project</th>
                 <th>Milestone</th>
                 <th>Reminder</th>
+                <th>Status</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -630,6 +643,7 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
                         <td><?php echo esc_html($task->project_title); ?></td>
                         <td><?php echo esc_html($task->milestone_title); ?></td>
                         <td><?php echo esc_html($task->reminder_time ?: '—'); ?></td>
+                        <td><?php echo esc_html(ucwords(str_replace('_', ' ', $task->status))); ?></td>
                         <td>
                             <a href="<?php echo admin_url('admin.php?page=goalforge_edit_task&id=' . intval($task->id)); ?>">✏️ Edit</a> |
                             <a href="<?php echo wp_nonce_url(admin_url('admin-post.php?action=goalforge_delete_task&task_id=' . intval($task->id)), 'goalforge_delete_task_action'); ?>"
@@ -661,14 +675,16 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
 </table>
  
 </div>
-<?php
+<?php foreach ($tasks as $task): 
    $assigned = $wpdb->get_results($wpdb->prepare(
     "SELECT u.display_name FROM {$wpdb->prefix}goalforge_task_assignees a 
      JOIN {$wpdb->users} u ON a.user_id = u.ID 
      WHERE a.task_id = %d", intval($task->id)
 ));
-echo implode(', ', wp_list_pluck($assigned, 'display_name'));
-
+echo implode(', ', wp_list_pluck($assigned, $task->title, 'display_name'));
+ 
+     endforeach ?>
+     <?php 
     }
     
 public static function renderCreateProjectForm()
@@ -689,48 +705,72 @@ public static function renderCreateProjectForm()
     <?php endif;
 
     ?>
+
     <div class="wrap">
-        <h1>Create Project</h1>
-        <form id="create-project-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-            <input type="hidden" name="action" value="goalforge_add_project">
-            <table class="form-table">
-                <tr>
-                    <th><label for="project-title">Project Title</label></th>
-                    <td><input type="text" id="project-title" name="goalforge_title" required></td>
-                </tr>
-                <tr>
-                    <th><label for="project-description">Description</label></th>
-                    <td><textarea id="project-description" name="goalforge_description"></textarea></td>
-                </tr>
-                <tr>
-                    <th><label for="project-start-date">Start Date</label></th>
-                    <td><input type="datetime-local" id="project-start-date" name="goalforge_start_date" required></td>
-                </tr>
-                <tr>
-                    <th><label for="project-due-date">Due Date</label></th>
-                    <td><input type="datetime-local" id="project-due-date" name="goalforge_due_date" required></td>
-                </tr>
-                <tr>
-                    <th><label for="project-reminder-time">Reminder</label></th>
-                    <td>
-                        <select id="project-reminder-time" name="project_reminder_time">
-                            <option value="">-- None --</option>
-                            <option value="on_due_date">On due date</option>
-                            <option value="5_minutes_before">5 minutes before</option>
-                            <option value="10_minutes_before">10 minutes before</option>
-                            <option value="15_minutes_before">15 minutes before</option>
-                            <option value="1_hour_before">1 hour before</option>
-                            <option value="2_hours_before">2 hours before</option>
-                            <option value="1_day_before">1 day before</option>
-                            <option value="2_days_before">2 days before</option>
-                        </select>
-                    </td>
-                </tr>
-            </table>
-            <?php wp_nonce_field('goalforge_create_project_action', 'goalforge_nonce'); ?>
-            <button type="submit" class="button button-primary" name="goalforge_create_project">Create Project</button>
-        </form>
-    </div>
+    <h1>Create Project</h1>
+    <form id="create-project-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+        <input type="hidden" name="action" value="goalforge_add_project">
+        <table class="form-table">
+            <tr>
+                <th><label for="project-title">Project Title</label></th>
+                <td><input type="text" id="project-title" name="goalforge_title" required></td>
+            </tr>
+            <tr>
+                <th><label for="project-description">Description</label></th>
+                <td><textarea id="project-description" name="goalforge_description"></textarea></td>
+            </tr>
+            <tr>
+                <th><label for="project-department">Department</label></th>
+                <td>
+                    <select id="project-department" name="goalforge_department" required>
+                        <option value="">-- Select Department --</option>
+                        <option value="Finance">Finance</option>
+                        <option value="IT and Development">IT and Development</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Production">Production</option>
+                        <option value="Administration">Administration</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="project-start-date">Start Date</label></th>
+                <td><input type="datetime-local" id="project-start-date" name="goalforge_start_date" required></td>
+            </tr>
+            <tr>
+                <th><label for="project-due-date">Due Date</label></th>
+                <td><input type="datetime-local" id="project-due-date" name="goalforge_due_date" required></td>
+            </tr>
+            <tr> <th><label for="project-status">Status</label></th> 
+            <td> <select id="project-status" name="goalforge_status" required> 
+                <option value="">-- Select Status --</option> 
+                <option value="Planning">Planning</option> 
+                <option value="Active">Active</option> 
+                <option value="Completed">Completed</option> 
+            </select> 
+            </td> 
+            </tr>
+            <tr>
+                <th><label for="project-reminder-time">Reminder</label></th>
+                <td>
+                    <select id="project-reminder-time" name="project_reminder_time">
+                        <option value="">-- None --</option>
+                        <option value="on_due_date">On due date</option>
+                        <option value="5_minutes_before">5 minutes before</option>
+                        <option value="10_minutes_before">10 minutes before</option>
+                        <option value="15_minutes_before">15 minutes before</option>
+                        <option value="1_hour_before">1 hour before</option>
+                        <option value="2_hours_before">2 hours before</option>
+                        <option value="1_day_before">1 day before</option>
+                        <option value="2_days_before">2 days before</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <?php wp_nonce_field('goalforge_create_project_action', 'goalforge_nonce'); ?>
+        <button type="submit" class="button button-primary" name="goalforge_create_project">Create Project</button>
+    </form>
+</div>
+
 
     <?php
     // List all projects below the form
@@ -751,6 +791,7 @@ public static function renderCreateProjectForm()
                 <tr>
                     <th>Title</th>
                     <th>Due Date</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -760,9 +801,17 @@ public static function renderCreateProjectForm()
                         <tr>
                             <td><?php echo esc_html($project->title); ?></td>
                             <td><?php echo esc_html(date('Y-m-d H:i', strtotime($project->due_date))); ?></td>
+                            <td><?php echo esc_html($project->status ?? '—'); ?></td>
                             <td>
                                 <a href="<?php echo admin_url('admin.php?page=goalforge_edit_project&id=' . intval($project->id)); ?>">✏️ Edit</a> |
-                                <a href="<?php echo admin_url('admin.php?page=goalforge_assign_collaborators&id=' . intval($project->id)); ?>">👥 Assign</a>
+                                <a href="<?php echo admin_url('admin.php?page=goalforge_assign_collaborators&id=' . intval($project->id)); ?>">👥 Assign to User</a> |
+                                <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" 
+                                onsubmit="return confirm('Are you sure you want to delete this project?');"> 
+                                <input type="hidden" name="action" value="goalforge_delete_project"> 
+                                <input type="hidden" name="project_id" value="<?php echo esc_attr($project->id); ?>">
+                                 <?php wp_nonce_field('goalforge_delete_project_action', 'goalforge_nonce'); ?>
+                                 <button type="submit" class="button button-danger">Delete</button> </form>
+                                
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -846,6 +895,17 @@ public static function renderEditTaskForm()
                     <td><input name="due_date" type="datetime-local" value="<?php echo esc_attr($task->due_date); ?>"></td>
                 </tr>
                 <tr>
+                    <th><label for="task-status">Status</label></th>
+                    <td>
+                        <select id="task-status" name="task_status" required>
+                            <option value="todo" <?php selected($task->status, 'todo'); ?>>To Do</option>
+                            <option value="in_progress" <?php selected($task->status, 'in_progress'); ?>>In Progress</option>
+                            <option value="done" <?php selected($task->status, 'done'); ?>>Done</option>
+                        </select>
+                    </td>
+                </tr>
+
+                <tr>
                     <th><label for="project_id">Project</label></th>
                     <td>
                         <select name="project_id">
@@ -917,6 +977,19 @@ public static function renderEditTaskForm()
                     <td><textarea name="goalforge_description" id="goalforge_description"><?php echo esc_textarea($project->description); ?></textarea></td>
                 </tr>
                 <tr>
+                <th><label for="project-department">Department</label></th>
+                <td>
+                    <select id="project-department" name="goalforge_department" required>
+                        <option value="">-- Select Department --</option>
+                        <option value="Finance">Finance</option>
+                        <option value="IT and Development">IT and Development</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Production">Production</option>
+                        <option value="Administration">Administration</option>
+                    </select>
+                </td>
+            </tr>
+                <tr>
                     <th><label for="goalforge_start_date">Start Date</label></th>
                     <td><input type="datetime-local" name="goalforge_start_date" id="goalforge_start_date" value="<?php echo esc_attr(date('Y-m-d\TH:i', strtotime($project->start_date))); ?>"></td>
                 </tr>
@@ -924,6 +997,16 @@ public static function renderEditTaskForm()
                     <th><label for="goalforge_due_date">Due Date</label></th>
                     <td><input type="datetime-local" name="goalforge_due_date" id="goalforge_due_date" value="<?php echo esc_attr(date('Y-m-d\TH:i', strtotime($project->due_date))); ?>"></td>
                 </tr>
+                <tr>
+                <th><label for="project-status">Status</label></th>
+                <td>
+                    <select id="project-status" name="goalforge_status" required>
+                        <option value="Planning" <?php selected($project->status, 'Planning'); ?>>Planning</option>
+                        <option value="Active" <?php selected($project->status, 'Active'); ?>>Active</option>
+                        <option value="Completed" <?php selected($project->status, 'Completed'); ?>>Completed</option>
+                    </select>
+                </td>
+            </tr>
                 <tr>
                     <th><label for="project_reminder_time">Reminder Time</label></th>
                     <td>
@@ -952,7 +1035,7 @@ public static function renderEditTaskForm()
             <?php wp_nonce_field('goalforge_update_project_action', 'goalforge_nonce'); ?>
             <p>
             <button type="submit" class="button button-primary">Update Project</button>
-            <a href="<?php echo admin_url('admin.php?page=goalforge_project_list'); ?>" class="button button-secondary">← Back to Project List</a>
+            <a href="<?php echo admin_url('admin.php?page=create-project'); ?>" class="button button-secondary">← Back to Project List</a>
         </p>    
         </form>
     </div>
@@ -1018,7 +1101,7 @@ public static function renderEditTaskForm()
             <?php wp_nonce_field('goalforge_assign_collaborators_nonce'); ?>
             <p>
                 <button type="submit" class="button button-primary">Assign Collaborators</button>
-                <a href="<?php echo admin_url('admin.php?page=goalforge_project_list'); ?>" class="button button-secondary">← Back to Project List</a>
+                <a href="<?php echo admin_url('admin.php?page=create-project'); ?>" class="button button-secondary">← Back to Project List</a>
             </p>
         </form>
 
@@ -1084,6 +1167,7 @@ public static function renderEditTaskForm()
             'description' => sanitize_textarea_field($_POST['description']),
             'start_date' => sanitize_text_field($_POST['start_date']),
             'due_date' => sanitize_text_field($_POST['due_date']),
+            'status' => sanitize_text_field($_POST['task_status']),
             'project_id'=> intval($_POST['project_id']),
             'milestone_id'=> intval($_POST['milestone_id'])
             ];

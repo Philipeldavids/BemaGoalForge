@@ -105,7 +105,9 @@ final class GoalForge {
                 'due_date'      => sanitize_text_field($_POST['goalforge_due_date']), 
                 'created_by'    => get_current_user_id(),
                 'reminder_time' => sanitize_text_field($_POST['project_reminder_time']),
-            ];
+                'department' => sanitize_text_field($_POST['goalforge_department']),
+                'status' => sanitize_text_field($_POST['goalforge_status'])  
+             ];
 
             $controller = new \BemaGoalForge\ProjectManagement\ProjectController(); 
             $result = $controller->createProject($projectData); 
@@ -120,7 +122,8 @@ final class GoalForge {
         //update task
         add_action('admin_post_goalforge_update_task', ['BemaGoalForge\Dashboard\AdminDashboardController', 'handleUpdateTask']);        
 
-
+        //delete project
+        add_action('admin_post_goalforge_delete_project', ['BemaGoalForge\ProjectManagement\ProjectController', 'delete_project']);
     // Update project        
             add_action('admin_post_goalforge_update_project', function () {
         if (!current_user_can('edit_posts')) wp_die('Unauthorized');
@@ -134,6 +137,8 @@ final class GoalForge {
             'start_date' => sanitize_text_field($_POST['goalforge_start_date']),
             'due_date' => sanitize_text_field($_POST['goalforge_due_date']),
             'reminder_time' => sanitize_text_field($_POST['project_reminder_time']),
+            'department' => sanitize_text_field($_POST['goalforge_department']),
+            'status' => sanitize_text_field($_POST['goalforge_status'])
         ];
 
         $controller = new \BemaGoalForge\ProjectManagement\ProjectController();
@@ -214,6 +219,7 @@ final class GoalForge {
                 'milestone_id' => intval($_POST['milestone_id']),
                 'project_id' => intval($_POST['project_id']),
                 'created_by' => get_current_user_id(),
+                'status' => sanitize_text_field($_POST['task_status'])
             ];
 
             $controller = new \BemaGoalForge\TaskManagement\TaskController(); 
@@ -228,6 +234,54 @@ final class GoalForge {
         exit;
 
         });
+
+        //Add Comments and Update status handlers
+
+        add_action('wp_ajax_goalforge_update_task_status',  function () {
+            global $wpdb;
+            $task_id = intval($_POST['task_id']);
+            $status = sanitize_text_field($_POST['status']);
+            $wpdb->update("{$wpdb->prefix}goalforge_tasks", ['status' => $status], ['id' => $task_id]);
+            wp_send_json_success();
+        });
+       
+
+        add_action('wp_ajax_goalforge_add_task_comment', function () {
+           global $wpdb;
+            $table = $wpdb->prefix . 'goalforge_task_comments';
+
+            $task_id = intval($_POST['task_id']);
+            $user_id = get_current_user_id();
+            $parent_id = isset($_POST['parent_id']) ? intval($_POST['parent_id']) : null;
+            $content = sanitize_text_field($_POST['content']);
+
+            $wpdb->insert($table, [
+                'task_id' => $task_id,
+                'user_id' => $user_id,
+                'parent_id' => $parent_id,
+                'content' => $content,
+            ]);
+
+            wp_send_json_success(['comment' => $content]);
+
+        }
+);
+                //status and comments enqueue
+        add_action('wp_enqueue_scripts', function() {
+    // Check if shortcode is used on the current page
+        global $post;
+        if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'goalforge_user_dashboard')) {
+            wp_enqueue_script('goalforge-user-dashboard-js', plugin_dir_url(__FILE__) . 'assets/js/goalforge-user-dashboard.js', ['jquery'], '1.0', true);
+
+            // Provide ajaxurl to script
+            wp_localize_script('goalforge-user-dashboard-js', 'ajaxurl', admin_url('admin-ajax.php'));
+        }
+    });
+
+        
+   
+
+
         //delete task
 
         add_action('admin_post_goalforge_delete_task', function () {

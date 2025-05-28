@@ -109,6 +109,8 @@ final class DatabaseHandler
             start_date DATETIME DEFAULT NULL, -- New start date field
             due_date DATETIME DEFAULT NULL,
             reminder_time VARCHAR(50) DEFAULT NULL, -- New reminder time field (e.g., '1 hour before')
+            department VARCHAR(50) DEFAULT NULL,
+            status VARCHAR(50) NOT NULL,
             created_by BIGINT(20) UNSIGNED NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -125,6 +127,7 @@ final class DatabaseHandler
         description TEXT,
         start_date DATETIME NOT NULL,
         due_date DATETIME NOT NULL,
+        status VARCHAR(50) NOT NULL,
         reminder_time VARCHAR(50),
         project_id BIGINT(20) UNSIGNED,
         milestone_id BIGINT(20) UNSIGNED,
@@ -210,6 +213,21 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
             FOREIGN KEY (user_id) REFERENCES {$wpdb->prefix}users(ID) ON DELETE CASCADE
         ) $charset_collate;";
 
+        //Comments Table
+        $comments_table = $wpdb->prefix . 'goalforge_task_comments';
+        $comments_sql = "CREATE TABLE IF NOT EXISTS $comments_table(
+        id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        task_id BIGINT(20) UNSIGNED NOT NULL,
+        user_id BIGINT(20) UNSIGNED NOT NULL,
+        parent_id BIGINT(20) UNSIGNED DEFAULT NULL,
+        content TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        FOREIGN KEY (task_id) REFERENCES $tasks_table(id) ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES {$wpdb->prefix}users(ID),
+        FOREIGN KEY (parent_id) REFERENCES {$wpdb->prefix}goalforge_task_comments(id) ON DELETE CASCADE
+)$charset_collate;";
+
         //MILESTONE TABLE
         $milestone_table = $wpdb->prefix . 'goalforge_milestones';
         $milestone_sql = "CREATE TABLE IF NOT EXISTS $milestone_table (
@@ -218,6 +236,7 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
             title VARCHAR(255) NOT NULL,
             description TEXT,
             due_date DATETIME,
+            status VARCHAR(20) DEFAULT 'not_started',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             FOREIGN KEY (project_id) REFERENCES {$wpdb->prefix}goalforge_projects(id) ON DELETE CASCADE
@@ -265,7 +284,7 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
         dbDelta($milestone_sql);
         dbDelta($assignee_sql);
         dbDelta($checklist_sql);
-
+        dbDelta($comments_sql);
 
         // Check if tables exist
 
@@ -312,7 +331,11 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
             return false;
         }
          if ($wpdb->get_var("SHOW TABLES LIKE '$checklist_table'") !== $checklist_table) {
-            error_log('GoalForge: Failed to create assignee table.');
+            error_log('GoalForge: Failed to create checklist table.');
+            return false;
+        }
+        if ($wpdb->get_var("SHOW TABLES LIKE '$comments_table'") !== $comments_table) {
+            error_log('GoalForge: Failed to create comments table.');
             return false;
         }
 
@@ -340,7 +363,8 @@ $project_users_sql = "CREATE TABLE IF NOT EXISTS $project_users_table (
             $wpdb->prefix . 'goalforge_projects',       // Primary table
              $wpdb->prefix . '$project_users_table',
              $wpdb->prefix . '$milestone_table',
-             $wpdb->prefix . '$assignee_table'
+             $wpdb->prefix . '$assignee_table',
+             $wpdb->prefix . '$comments_table'
         ];
     
         foreach ($tables as $table_name) {
