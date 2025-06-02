@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <tr>
                         <th><label for="project-id">Select Project</label></th>
                         <td>
-                            <select id="project-id" name="project_id" required>
+                            <select id="project-id" name="project_id" >
                                 <option value="">-- Select Project --</option>
                                 <?php foreach ($projects as $project) : ?>
                                     <option value="<?php echo esc_attr($project['id']); ?>">
@@ -278,7 +278,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <tr>
                         <th><label for="bonus-amount">Bonus Amount</label></th>
                         <td>
-                            <input type="number" id="bonus-amount" name="bonus_amount" step="0.01" min="0" required>
+                            <input type="number" id="bonus-amount" name="bonus_amount" step="0.01" min="0" >
                         </td>
                     </tr>
                 </table>
@@ -466,7 +466,7 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
             <tr>
                 <th><label for="task-id">Select Task</label></th>
                 <td>
-                    <select id="task-id" name="task_id" required>
+                    <select id="task-id" name="task_id" >
                         <option value="">-- Select Task --</option>
                         <?php foreach ($tasks as $task) : ?>
                             <option value="<?php echo esc_attr($task['id']); ?>">
@@ -479,7 +479,7 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
             <tr>
                 <th><label for="project-id">Select Project</label></th>
                 <td>
-                    <select id="project-id" name="project_id" required>
+                    <select id="project-id" name="project_id" >
                         <option value="">-- Select Project --</option>
                         <?php foreach ($projects as $project) : ?>
                             <option value="<?php echo esc_attr($project['id']); ?>">
@@ -540,7 +540,7 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
         <table class="form-table">
             <tr>
                 <th><label for="task-title">Task Title</label></th>
-                <td><input type="text" id="task-title" name="task_title" required></td>
+                <td><input type="text" id="task-title" name="task_title" ></td>
             </tr>
             <tr>
                 <th><label for="task-description">Task Description</label></th>
@@ -548,11 +548,11 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
             </tr>
             <tr>
                 <th><label for="task-start-date">Start Date</label></th>
-                <td><input type="datetime-local" id="task-start-date" name="task_start_date" required></td>
+                <td><input type="datetime-local" id="task-start-date" name="task_start_date" ></td>
             </tr>
             <tr>
                 <th><label for="task-due-date">Due Date</label></th>
-                <td><input type="datetime-local" id="task-due-date" name="task_due_date" required></td>
+                <td><input type="datetime-local" id="task-due-date" name="task_due_date" ></td>
             </tr>
             <tr>
                 <th><label for="task-reminder-time">Reminder</label></th>
@@ -573,7 +573,7 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
             <tr>
                 <th><label for="task-status">Status</label></th>
                 <td>
-                    <select id="task-status" name="task_status" required>
+                    <select id="task-status" name="task_status" >
                         <option value="todo">To Do</option>
                         <option value="in_progress">In Progress</option>
                         <option value="done">Done</option>
@@ -654,7 +654,7 @@ $projects = $wpdb->get_results("SELECT id, title FROM {$wpdb->prefix}goalforge_p
                                 <input type="hidden" name="action" value="goalforge_assign_user_to_task">
                                 <input type="hidden" name="task_id" value="<?php echo esc_attr(intval($task->id)); ?>">
                                 <?php wp_nonce_field('assign_user_to_task', '_wpnonce'); ?>
-                                <select name="user_id" required>
+                                <select name="user_id" >
                                     <option value="">Assign to user</option>
                                     <?php foreach ($users as $user): ?>
                                         <option value="<?php echo esc_attr($user->ID); ?>">
@@ -713,7 +713,7 @@ public static function renderCreateProjectForm()
         <table class="form-table">
             <tr>
                 <th><label for="project-title">Project Title</label></th>
-                <td><input type="text" id="project-title" name="goalforge_title" required></td>
+                <td><input type="text" id="project-title" name="goalforge_title" ></td>
             </tr>
             <tr>
                 <th><label for="project-description">Description</label></th>
@@ -722,7 +722,7 @@ public static function renderCreateProjectForm()
             <tr>
                 <th><label for="project-department">Department</label></th>
                 <td>
-                    <select id="project-department" name="goalforge_department" required>
+                    <select id="project-department" name="goalforge_department" >
                         <option value="">-- Select Department --</option>
                         <option value="Finance">Finance</option>
                         <option value="IT and Development">IT and Development</option>
@@ -734,14 +734,14 @@ public static function renderCreateProjectForm()
             </tr>
             <tr>
                 <th><label for="project-start-date">Start Date</label></th>
-                <td><input type="datetime-local" id="project-start-date" name="goalforge_start_date" required></td>
+                <td><input type="datetime-local" id="project-start-date" name="goalforge_start_date" ></td>
             </tr>
             <tr>
                 <th><label for="project-due-date">Due Date</label></th>
-                <td><input type="datetime-local" id="project-due-date" name="goalforge_due_date" required></td>
+                <td><input type="datetime-local" id="project-due-date" name="goalforge_due_date" ></td>
             </tr>
             <tr> <th><label for="project-status">Status</label></th> 
-            <td> <select id="project-status" name="goalforge_status" required> 
+            <td> <select id="project-status" name="goalforge_status" > 
                 <option value="">-- Select Status --</option> 
                 <option value="Planning">Planning</option> 
                 <option value="Active">Active</option> 
@@ -880,7 +880,7 @@ public static function renderEditTaskForm()
             <table class="form-table">
                 <tr>
                     <th><label for="title">Title</label></th>
-                    <td><input name="title" type="text" value="<?php echo esc_attr($task->title); ?>" required></td>
+                    <td><input name="title" type="text" value="<?php echo esc_attr($task->title); ?>" ></td>
                 </tr>
                 <tr>
                     <th><label for="description">Description</label></th>
@@ -897,7 +897,7 @@ public static function renderEditTaskForm()
                 <tr>
                     <th><label for="task-status">Status</label></th>
                     <td>
-                        <select id="task-status" name="task_status" required>
+                        <select id="task-status" name="task_status" >
                             <option value="todo" <?php selected($task->status, 'todo'); ?>>To Do</option>
                             <option value="in_progress" <?php selected($task->status, 'in_progress'); ?>>In Progress</option>
                             <option value="done" <?php selected($task->status, 'done'); ?>>Done</option>
@@ -970,7 +970,7 @@ public static function renderEditTaskForm()
             <table class="form-table">
                 <tr>
                     <th><label for="goalforge_title">Title</label></th>
-                    <td><input type="text" name="goalforge_title" id="goalforge_title" value="<?php echo esc_attr($project->title); ?>" required></td>
+                    <td><input type="text" name="goalforge_title" id="goalforge_title" value="<?php echo esc_attr($project->title); ?>" ></td>
                 </tr>
                 <tr>
                     <th><label for="goalforge_description">Description</label></th>
@@ -979,7 +979,7 @@ public static function renderEditTaskForm()
                 <tr>
                 <th><label for="project-department">Department</label></th>
                 <td>
-                    <select id="project-department" name="goalforge_department" required>
+                    <select id="project-department" name="goalforge_department" >
                         <option value="">-- Select Department --</option>
                         <option value="Finance">Finance</option>
                         <option value="IT and Development">IT and Development</option>
@@ -1000,7 +1000,7 @@ public static function renderEditTaskForm()
                 <tr>
                 <th><label for="project-status">Status</label></th>
                 <td>
-                    <select id="project-status" name="goalforge_status" required>
+                    <select id="project-status" name="goalforge_status" >
                         <option value="Planning" <?php selected($project->status, 'Planning'); ?>>Planning</option>
                         <option value="Active" <?php selected($project->status, 'Active'); ?>>Active</option>
                         <option value="Completed" <?php selected($project->status, 'Completed'); ?>>Completed</option>
