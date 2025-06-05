@@ -62,3 +62,49 @@ jQuery(document).ready(function ($) {
         });
     });
 });
+
+jQuery(document).ready(function ($) {
+$('.goalforge-comments').on('click', '.edit-comment-btn', function () {
+const $item = $(this).closest('.comment-item');
+$item.find('.comment-text, .edit-comment-btn, .delete-comment-btn').hide();
+$item.find('.edit-comment-text, .save-comment-btn').show();
+});
+$('.goalforge-comments').on('click', '.save-comment-btn', function () {
+    const $item = $(this).closest('.comment-item');
+    const commentId = $item.data('comment-id');
+    const newText = $item.find('.edit-comment-text').val();
+
+    $.post(ajaxurl, {
+        action: 'goalforge_edit_comment',
+        comment_id: commentId,
+        content: newText
+    }, function (response) {
+        if (response.success) {
+            $item.find('.comment-text').text(newText).show();
+            $item.find('.edit-comment-text, .save-comment-btn').hide();
+            $item.find('.edit-comment-btn, .delete-comment-btn').show();
+        } else {
+            alert(response.data.message);
+        }
+    });
+});
+
+$('.goalforge-comments').on('click', '.delete-comment-btn', function () {
+    if (!confirm('Are you sure you want to delete this comment?')) return;
+
+    const $item = $(this).closest('.comment-item');
+    const commentId = $item.data('comment-id');
+
+    $.post(ajaxurl, {
+        action: 'goalforge_delete_comment',
+        comment_id: commentId
+    }, function (response) {
+        if (response.success) {
+            $item.remove();
+        } else {
+            alert(response.data.message);
+        }
+    });
+});
+
+});

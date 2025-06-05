@@ -264,8 +264,44 @@ final class GoalForge {
 
             wp_send_json_success(['comment' => $content]);
 
+        });
+
+        //edit comment 
+
+        add_action('wp_ajax_goalforge_edit_comment', function () {
+        global $wpdb;
+        $comment_id = intval($_POST['comment_id']);
+        $new_content = sanitize_text_field($_POST['content']);
+        $user_id = get_current_user_id();
+            $comment = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}goalforge_task_comments WHERE id = %d", $comment_id));
+
+            if ($comment && $comment->user_id == $user_id) {
+                $wpdb->update("{$wpdb->prefix}goalforge_task_comments", ['content' => $new_content], ['id' => $comment_id]);
+                wp_send_json_success(['message' => 'Comment updated.']);
+            } else {
+                wp_send_json_error(['message' => 'Unauthorized or comment not found.']);
+            }
+
+        });
+
+        
+        add_action('wp_ajax_goalforge_delete_comment', function() {
+        global $wpdb;
+        $comment_id = intval($_POST['comment_id']);
+        $user_id = get_current_user_id();
+
+        $comment = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}goalforge_task_comments WHERE id = %d", $comment_id));
+
+        if ($comment && $comment->user_id == $user_id) {
+            $wpdb->delete("{$wpdb->prefix}goalforge_task_comments", ['id' => $comment_id]);
+            wp_send_json_success(['message' => 'Comment deleted.']);
+        } else {
+            wp_send_json_error(['message' => 'Unauthorized or comment not found.']);
         }
-);
+
+        });
+
+        
                 //status and comments enqueue
         add_action('wp_enqueue_scripts', function() {
     // Check if shortcode is used on the current page

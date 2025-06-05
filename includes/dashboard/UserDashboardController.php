@@ -245,23 +245,44 @@ public static function goalforge_get_task_comments_tree($task_id, $parent_id = n
 }
 
 public static function goalforge_render_comments($comments, $parent_author = null) {
-    $output = '<ul class="goalforge-comments">';
-    foreach ($comments as $comment) {
-        $reply_tag = $parent_author ? '<span class="replying-to">Replying to <strong>' . esc_html($parent_author) . '</strong></span><br>' : '';
-        $output .= '<li>';
-        $output .= '<div class="comment-meta"><strong>' . esc_html($comment->display_name) . '</strong> - <small>' . esc_html($comment->created_at) . '</small></div>';
-        $output .= '<div class="comment-body">' . $reply_tag . esc_html($comment->content) . '</div>';
-        $output .= '<button class="reply-btn" data-parent-id="' . $comment->id . '">Reply</button>';
-        $output .= '<div class="reply-form" data-parent-id="' . $comment->id . '" style="display:none;">
-                        <textarea class="reply-text"></textarea>
-                        <button class="submit-reply-btn" data-task-id="' . $comment->task_id . '" data-parent-id="' . $comment->id . '">Submit</button>
-                    </div>';
-        if (!empty($comment->replies)) {
-            $output .= self::goalforge_render_comments($comment->replies, $comment->display_name); // pass parent name
-        }
-        $output .= '</li>';
+$current_user_id = get_current_user_id();
+$output = '<ul class="goalforge-comments">';
+
+foreach ($comments as $comment) {
+    $is_owner = $comment->user_id == $current_user_id;
+    $reply_tag = $parent_author ? '<span class="replying-to">Replying to <strong>' . esc_html($parent_author) . '</strong></span><br>' : '';
+
+    $output .= '<li class="comment-item" data-comment-id="' . esc_attr($comment->id) . '">';
+    $output .= '<div class="comment-meta"><strong>' . esc_html($comment->display_name) . '</strong> - <small>' . esc_html($comment->created_at) . '</small></div>';
+
+    $output .= '<div class="comment-body">';
+    $output .= $reply_tag . '<span class="comment-text">' . esc_html($comment->content) . '</span>';
+    $output .= '<textarea class="edit-comment-text" style="display:none;">' . esc_textarea($comment->content) . '</textarea>';
+    $output .= '</div>';
+
+    if ($is_owner) {
+        $output .= '<div class="comment-actions">';
+        $output .= '<p class="edit-comment-btn">✏️ Edit</p> ';
+        $output .= '<button class="save-comment-btn" style="display:none;">💾 Save</button> ';
+        $output .= '<p class="delete-comment-btn">🗑️ Delete</p>';
+        $output .= '</div>';
     }
-    $output .= '</ul>';
-    return $output;
+
+    $output .= '<button class="reply-btn" data-parent-id="' . esc_attr($comment->id) . '">Reply</button>';
+    $output .= '<div class="reply-form" data-parent-id="' . esc_attr($comment->id) . '" style="display:none;">
+                    <textarea class="reply-text"></textarea>
+                    <button class="submit-reply-btn" data-task-id="' . esc_attr($comment->task_id) . '" data-parent-id="' . esc_attr($comment->id) . '">Submit</button>
+                </div>';
+
+    if (!empty($comment->replies)) {
+        $output .= self::goalforge_render_comments($comment->replies, $comment->display_name);
+    }
+
+    $output .= '</li>';
+}
+
+$output .= '</ul>';
+return $output;
+
 }
 }
