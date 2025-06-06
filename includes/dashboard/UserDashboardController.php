@@ -139,7 +139,11 @@ ob_start();
                         <div class="goalforge-progress-bar">
                             <div class="goalforge-progress" style="width: <?php echo esc_attr($percent); ?>%;"></div>
                         </div>
-                        <small><?php echo "$completedItems of $totalItems checklist items completed ($percent%)"; ?></small>
+                        <small class="goalforge-progress-label">
+                    <?php echo "$completedItems of $totalItems checklist items completed ($percent%)"; ?>
+                    </small>
+
+                        <!-- <small><?php echo "$completedItems of $totalItems checklist items completed ($percent%)"; ?></small> -->
                     <?php endif; ?>
 
                     <?php if (!empty($taskChecklist)) : ?>
@@ -147,7 +151,7 @@ ob_start();
                             <?php foreach ($taskChecklist as $item) : ?>
                                 <li class="checklist-item">
                                     <label>
-                                        <input type="checkbox" data-id="<?php echo $item['id']; ?>" <?php checked($item['is_completed'], 1); ?> disabled>
+                                        <input type="checkbox" class="goalforge-checklist-toggle" data-id="<?php echo $item['id']; ?>" <?php checked($item['is_completed'], 1); ?>>
                                         <?php echo esc_html($item['title']); ?>
                                     </label>
                                 </li>

@@ -108,3 +108,43 @@ $('.goalforge-comments').on('click', '.delete-comment-btn', function () {
 });
 
 });
+
+jQuery(document).ready(function($) {
+    $('.goalforge-checklist-toggle').on('change', function () {
+        const checkbox = $(this);
+        const checklistId = checkbox.data('id');
+        const isChecked = checkbox.is(':checked') ? 1 : 0;
+        const taskContainer = checkbox.closest('.goalforge-task');
+
+        $.ajax({
+            url: goalforge_ajax.ajax_url,
+            method: 'POST',
+            data: {
+                action: 'goalforge_toggle_checklist',
+                nonce: goalforge_ajax.nonce,
+                checklist_id: checklistId,
+                is_completed: isChecked
+            },
+            success: function (response) {
+                if (!response.success) {
+                    alert('Error saving checklist status.');
+                    checkbox.prop('checked', !isChecked);
+                } else {
+                    // Update progress bar and label
+                    const checkboxes = taskContainer.find('.goalforge-checklist-toggle');
+                    const total = checkboxes.length;
+                    const completed = checkboxes.filter(':checked').length;
+                    const percent = total ? Math.round((completed / total) * 100) : 0;
+
+                    taskContainer.find('.goalforge-progress').css('width', percent + '%');
+                    taskContainer.find('.goalforge-progress-label').text(`${completed} of ${total} checklist items completed (${percent}%)`);
+                }
+            },
+            error: function () {
+                alert('Request failed.');
+                checkbox.prop('checked', !isChecked);
+            }
+        });
+    });
+});
+

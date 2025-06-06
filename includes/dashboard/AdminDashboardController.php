@@ -93,12 +93,57 @@ class AdminDashboardController {
     public static function renderDashboard()
     {
        global $wpdb;
+      
 
     $tasks_table = $wpdb->prefix . 'goalforge_tasks';
     $projects_table = $wpdb->prefix . 'goalforge_projects';
     $milestone_table = $wpdb->prefix . 'goalforge_milestones';
     $project_users_table = $wpdb->prefix . 'goalforge_project_users';
     $users_table = $wpdb->prefix . 'users';
+    $checklist_table = $wpdb->prefix . 'goalforge_task_checklists';
+
+
+// Get all projects
+    $projects = $wpdb->get_results("SELECT * FROM $projects_table");
+
+    $project_progress = [];
+
+        foreach ($projects as $project) {
+            $tasks = $wpdb->get_results($wpdb->prepare(
+                "SELECT id FROM $tasks_table WHERE project_id = %d",
+                $project->id
+            ));
+
+            $task_ids = wp_list_pluck($tasks, 'id');
+            if (empty($task_ids)) {
+                $project_progress[$project->id] = [
+                    'title' => $project->title,
+                    'percent' => 0,
+                    'color' => 'gray',
+                ];
+                continue;
+            }
+
+            $in_clause = implode(',', array_map('intval', $task_ids));
+
+            $checklists = $wpdb->get_results("SELECT is_completed FROM $checklist_table WHERE task_id IN ($in_clause)");
+
+            $total = count($checklists);
+            $completed = count(array_filter($checklists, fn($item) => $item->is_completed));
+
+            $percent = $total > 0 ? round(($completed / $total) * 100) : 0;
+
+            $color = $percent === 100 ? 'green' : ($percent >= 50 ? 'orange' : 'red');
+
+            $project_progress[$project->id] = [
+                'title' => $project->title,
+                'percent' => $percent,
+                'color' => $color,
+            ];
+        }
+
+
+   
 
     // Fetch tasks with project title
     $tasks = $wpdb->get_results("
@@ -123,13 +168,26 @@ class AdminDashboardController {
 
         ?>
         <div class="wrap"> 
+            <div>
             <h1>GoalForge Dashboard</h1>
             <p>Total Tasks: <?php echo esc_html($taskCount); ?></p>
             <p>Total Projects: <?php echo esc_html($projectCount); ?></p>
             <p><a href="<?php echo admin_url('admin.php?page=task-linking'); ?>" class="button button-primary">Link Tasks to Projects</a></p>
-            <p><a href="<?php echo admin_url('admin.php?page=bonus-assignment'); ?>" class="button button-primary">Assign Bonuses</a></p>
-     
+            <p><a href="<?php echo admin_url('admin.php?page=bonus-assignment'); ?>" class="button button-primary">Assign Bonuses</a></p>  
+        </div>
+        <?php
 
+                    echo '<div class="project-progress">';
+            foreach ($project_progress as $project) {
+                echo '<div class="project-progress">';
+                echo '<h4>' . esc_html($project['title']) . ' - ' . $project['percent'] . '%</h4>';
+                echo '<div class="progress-bar" style="background:#ddd; height: 12px; border-radius: 6px; overflow:hidden;">';
+                echo '<div style="width:' . $project['percent'] . '%; background:' . $project['color'] . '; height:100%; transition:width 0.3s;"></div>';
+                echo '</div>';
+                echo '</div><br>';
+            }
+            echo '</div>';
+            ?>
             <div id="goalforge-dashboard-grid"></div>
 
             <script>

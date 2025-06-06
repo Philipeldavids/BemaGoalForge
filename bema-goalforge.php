@@ -234,6 +234,43 @@ final class GoalForge {
         exit;
 
         });
+        //update checklists
+
+        add_action('wp_ajax_goalforge_toggle_checklist', function () {
+    check_ajax_referer('goalforge_checklist_nonce', 'nonce');
+
+    $user_id = get_current_user_id();
+    $checklist_id = intval($_POST['checklist_id']);
+    $is_completed = intval($_POST['is_completed']);
+
+    global $wpdb;
+    $checklist_table = "{$wpdb->prefix}goalforge_task_checklists";
+
+    // Confirm user is assigned to the task
+    $task_id = $wpdb->get_var($wpdb->prepare("SELECT task_id FROM $checklist_table WHERE id = %d", $checklist_id));
+    $is_assigned = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM {$wpdb->prefix}goalforge_task_assignees WHERE task_id = %d AND user_id = %d",
+        $task_id, $user_id
+    ));
+
+    if (!$is_assigned) {
+        wp_send_json_error(['message' => 'Not authorized.']);
+    }
+
+    $updated = $wpdb->update(
+        $checklist_table,
+        ['is_completed' => $is_completed],
+        ['id' => $checklist_id],
+        ['%d'],
+        ['%d']
+    );
+
+    if ($updated !== false) {
+        wp_send_json_success();
+    } else {
+        wp_send_json_error(['message' => 'DB update failed.']);
+    }
+});
 
         //Add Comments and Update status handlers
 
@@ -310,9 +347,18 @@ final class GoalForge {
             wp_enqueue_script('goalforge-user-dashboard-js', plugin_dir_url(__FILE__) . 'assets/js/goalforge-user-dashboard.js', ['jquery'], '1.0', true);
 
             // Provide ajaxurl to script
-            wp_localize_script('goalforge-user-dashboard-js', 'ajaxurl', admin_url('admin-ajax.php'));
+           // wp_localize_script('goalforge-user-dashboard-js', 'ajaxurl', admin_url('admin-ajax.php'));
+            wp_localize_script('goalforge-user-dashboard-js', 'goalforge_ajax', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce'    => wp_create_nonce('goalforge_checklist_nonce')
+            ]);
         }
     });
+
+//     add_action('wp_enqueue_scripts', function () {
+//     wp_enqueue_script('goalforge-frontend', plugin_dir_url(__FILE__) . 'assets/js/goalforge-frontend.js', ['jquery'], '1.0', true);
+   
+// });
 
         
    
